@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import requests
 import config
+import calendar_handler
 
 prefix = 'https://api.telegram.org/bot'
 geturl = prefix + config.TELEGRAM_KEY + '/getUpdates'
@@ -27,17 +28,10 @@ def main():
             offset = response['update_id'] + 1
 
 
-def get_calendar():
-    # В будущем сделать поиск лучше
-    response = requests.get(config.CONF_API + '/content/12345678?expand=body.view').json()
-
-
-def login():
-    pass
-
-
 if __name__ == '__main__':
     try:
-        main()
+        html = calendar_handler.get_calendar(calendar_handler.login())
+        calendar_handler.parse_calendar(html)
+        # main()
     except KeyboardInterrupt:
         exit()
