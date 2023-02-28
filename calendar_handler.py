@@ -2,6 +2,7 @@ import requests
 import config
 import json
 import database
+import calendar
 from bs4 import BeautifulSoup
 
 
@@ -36,6 +37,32 @@ def sync_calendar(html_string):
                              "weekday": day_object["weekday"]},
                             {"$set": day_object})
                     j += 1
+
+
+def gen_month_table(month, year):
+    template = f'<h1><strong>{number_to_month(month)}</strong></h1><table class="wrapped"><colgroup><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"></colgroup><tbody><tr><th>ПН</th><th>ВТ</th><th>СР</th><th>ЧТ</th><th>ПТ</th><th>СБ</th><th>ВС</th></tr>'
+    first_weekday, days = calendar.monthrange(year, month)
+
+    offset = 8 - first_weekday
+    template += "<tr>"
+    for _ in range(first_weekday):
+        template += "<td><br></td>"
+    for i in range(1, offset):
+        template += f"""<td{' class="highlight-#ffebe6" data-highlight-colour="#ffebe6"' if i >= 6 else ''}>"""
+        template += f"{i}</td>"
+    template += "</tr>"
+
+    for i in range(1, 5):
+        template += "<tr>"
+        for j in range(1, 8):
+            if 7*i + j - first_weekday <= days:
+                template += f"""<td {'class="highlight-#ffebe6" data-highlight-colour="#ffebe6"' if j >= 6 else ''}>"""
+                template += f"{7*i + j - first_weekday}</td>"
+            else:
+                template += "<td><br></td>"
+        template += "</tr>"
+    template += "</tbody></table>"
+    return template
 
 
 def login():
