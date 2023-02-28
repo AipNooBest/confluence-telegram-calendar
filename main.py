@@ -30,8 +30,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-        html = calendar_handler.get_calendar(calendar_handler.login())
-        calendar_handler.parse_calendar(html)
-        # main()
+        pass
     except KeyboardInterrupt:
         exit()
