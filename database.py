@@ -21,3 +21,8 @@ def delete_document(query):
 def check_and_update(query, new_document):
     if not collection.find_one_and_update(query, new_document):
         insert_document(new_document["$set"])
+
+
+def get_owner_name(id):
+    print(id)
+    return db['telegrams'].find_one({"user_id": id}).get('full_name')

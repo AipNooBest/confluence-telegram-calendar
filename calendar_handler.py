@@ -17,9 +17,9 @@ def get_calendar(cookies):
     return json.loads(response.content)["body"]["storage"]["value"]
 
 
-def sync_calendar(html_string):
+def sync_calendar():
     try:
-        html = BeautifulSoup(html_string, 'html.parser')
+        html = BeautifulSoup(get_calendar(login()), 'html.parser')
         for expander in html.findAll("ac:structured-macro", attrs={'ac:name': 'expand'}):
             for table in expander.findAll("table"):
                 tbody = table.find("tbody")
@@ -32,21 +32,23 @@ def sync_calendar(html_string):
                             day_object = {
                                 "owner": expander.find("ac:parameter", attrs={'ac:name': 'title'}).text.strip(),
                                 "day": int(cell.contents[0].text) if hasattr(cell, "contents") else int(cell.text),
-                                "month": month_to_number(table.previous_sibling.text),
+                                "month": _month_to_number(table.previous_sibling.text),
                                 "weekday": j,
-                                "hours": get_hours(cell)
+                                "hours": _get_hours(cell)
                             }
                             database.check_and_update(
                                 {"owner": day_object["owner"], "day": day_object["day"], "month": day_object["month"],
                                  "weekday": day_object["weekday"]},
                                 {"$set": day_object})
                         j += 1
+        return True
     except Exception:
         logging.exception("Ошибка при синхронизации календаря.")
+    return False
 
 
-def gen_month_table(month, year):
-    header = f'<h1><strong>{number_to_month(month)}</strong></h1>'
+def _gen_month_table(month, year):
+    header = f'<h1><strong>{_number_to_month(month)}</strong></h1>'
     header = BeautifulSoup(header, 'html.parser').contents[0]
     template = '<table class="wrapped"><colgroup><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"><col style="width: 40.0px;"></colgroup><tbody><tr><th>ПН</th><th>ВТ</th><th>СР</th><th>ЧТ</th><th>ПТ</th><th>СБ</th><th>ВС</th></tr>'
     first_weekday, days = calendar.monthrange(year, month)
@@ -89,21 +91,20 @@ def login():
 
 
 def update_month():
-    page = get_calendar(login())
-    sync_calendar(page)
-    page = BeautifulSoup(page, 'html.parser')
+    sync_calendar()
+    page = BeautifulSoup(get_calendar(login()), 'html.parser')
     for expander in page.findAll("ac:structured-macro", attrs={'ac:name': 'expand'}):
         current_month = expander.contents[1].contents[2]
         next_month = expander.contents[1].contents[4]
         today = date.today()
-        if next_month.text == number_to_month(today.month):
+        if next_month.text == _number_to_month(today.month):
             expander.contents[1].contents[0] = current_month
             expander.contents[1].contents[1] = current_month.next_sibling
             expander.contents[1].contents[2] = next_month
             expander.contents[1].contents[3] = next_month.next_sibling
             expander.contents[1].contents[4], expander.contents[1].contents[5] = \
-                gen_month_table(today.month + 1, today.year if today.month != 12 else today.year + 1)
-    upload_page(page)
+                _gen_month_table(today.month + 1, today.year if today.month != 12 else today.year + 1)
+    _upload_page(page)
 
 
 def update_day(day_object):
@@ -111,7 +112,7 @@ def update_day(day_object):
         page = BeautifulSoup(get_calendar(login()))
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={day_object["owner"]}).parent
-        month_div = expander.find("h1", text=number_to_month(day_object["month"])).next_sibling
+        month_div = expander.find("h1", text=_number_to_month(day_object["month"])).next_sibling
         if not month_div: return False
         # noinspection PyUnresolvedReferences
         cell = month_div.find("td", text=day_object["day"])
@@ -126,17 +127,18 @@ def update_day(day_object):
                 cell.attrs['data-highlight-colour'] = '#ffe380'
                 cell.attrs['class'] = 'highlight-#ffe380'
         database.check_and_update(
-            {"owner": day_object["owner"], "day": day_object["day"], "month": day_object["month"]},
+            {"owner": day_object["owner"], "day": day_object["day"], "month": day_object["month"],
+             "weekday": day_object["weekday"]},
             {"$set": day_object})
-        upload_page(page)
+        _upload_page(page)
         return True
     except Exception as e:
         # Я начну отлавливать ошибки, честно-честно!
         logging.exception("Ошибка во время обновления дня")
-        return False
+    return False
 
 
-def upload_page(content: BeautifulSoup):
+def _upload_page(content: BeautifulSoup):
     cookie = login()
     current_page = json.loads(requests.get(config.CONF_API + f'/content/{config.CALENDAR_PAGE}',
                                            cookies=cookie).content)
@@ -161,19 +163,19 @@ def upload_page(content: BeautifulSoup):
         raise Exception("Ошибка во время обновления страницы")
 
 
-def month_to_number(name):
+def _month_to_number(name):
     months = {'Январь': 1, 'Февраль': 2, 'Март': 3, 'Апрель': 4, 'Май': 5, 'Июнь': 6, 'Июль': 7, 'Август': 8,
               'Сентябрь': 9, 'Октябрь': 10, 'Ноябрь': 11, 'Декабрь': 12}
     return months[name]
 
 
-def number_to_month(number):
+def _number_to_month(number):
     months = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 8: 'Август',
               9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
     return months[number]
 
 
-def get_hours(ctx):
+def _get_hours(ctx):
     colour = ctx.parent.attrs['data-highlight-colour'] if 'data-highlight-colour' in ctx.parent.attrs else None
     match colour:
         case '#36b37e':
