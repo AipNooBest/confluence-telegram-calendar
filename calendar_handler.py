@@ -124,8 +124,8 @@ def update_day(day_object):
                 cell.attrs['data-highlight-colour'] = '#de350b'
                 cell.attrs['class'] = 'highlight-#de350b'
             case _:
-                cell.attrs['data-highlight-colour'] = '#ffe380'
-                cell.attrs['class'] = 'highlight-#ffe380'
+                cell.attrs['data-highlight-colour'] = '#ffc400'
+                cell.attrs['class'] = 'highlight-#ffc400'
         database.check_and_update(
             {"owner": day_object["owner"], "day": day_object["day"], "month": day_object["month"],
              "weekday": day_object["weekday"]},
@@ -180,7 +180,7 @@ def _get_hours(ctx):
     match colour:
         case '#36b37e':
             return 8
-        case '#ffe380':
+        case '#ffc400':
             return float(ctx.parent.contents[1].text[:1]) if len(ctx.parent.contents) > 1 else 4
         case '#de350b':
             return 0
