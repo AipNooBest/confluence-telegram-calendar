@@ -14,6 +14,8 @@ def info(message: types.Message):
     if message.text == '/id':
         bot.send_message(message.from_user.id, str(message.from_user.id))
     if message.text == '/notif':
+        if not database.get_owner_name(message.from_user.id):
+            return bot.send_message(message.chat.id, "Вас нет в списке тех, кто может отмечаться")
         send_notification(message.from_user.id)
 
 
@@ -32,9 +34,6 @@ def send_notification(user_id):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call: types.CallbackQuery):
     hours = int(call.data.split(';')[1])
-
-    if not database.get_owner_name(call.from_user.id):
-        return bot.send_message(call.message.chat.id, "Вас нет в списке тех, кто может отмечаться")
 
     if hours == -1:
         bot.edit_message_text(f"Сколько часов?",
@@ -65,7 +64,7 @@ def hours_handler(message: types.Message, call):
 
 
 def update_calendar(call, hours):
-    owner = database.get_owner_name(call.from_user.id)
+    owner = database.get_owner_name(call.from_user.id).get('full_name')
     date_parts = call.data.split(';')[0].split('-')
     mark_date = date(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
     if not ch.update_day({

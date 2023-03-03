@@ -24,7 +24,7 @@ def check_and_update(query, new_document):
 
 
 def get_owner_name(id):
-    return db['telegrams'].find_one({"user_id": id}).get('full_name')
+    return db['telegrams'].find_one({"user_id": id})
 
 
 def get_all_employees():

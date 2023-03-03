@@ -109,6 +109,7 @@ def update_month():
 
 def update_day(day_object):
     try:
+        sync_calendar()
         page = BeautifulSoup(get_calendar(login()))
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={day_object["owner"]}).parent
