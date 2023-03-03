@@ -1,35 +1,21 @@
 #!/usr/bin/env python3
 import requests
-import config
-import calendar_handler
-
-prefix = 'https://api.telegram.org/bot'
-geturl = prefix + config.TELEGRAM_KEY + '/getUpdates'
-sendurl = prefix + config.TELEGRAM_KEY + '/sendMessage'
-timeout = 60
+import telegram
+import database
 
 
 def main():
-    offset = 0
-    while True:
-        dt = dict(offset=offset, timeout=timeout)
-        try:
-            poll = requests.post(geturl, data=dt, timeout=None).json()
-        except ValueError:  # incomplete data
-            continue
-        if not poll['ok'] or not poll['result']:
-            continue
-        for response in poll['result']:
-            message = response['message']
-            chat_id = message['chat']['id']
-            if 'text' in message:
-                dt = dict(chat_id=chat_id, text=message['text'])
-                requests.post(sendurl, data=dt).json()
-            offset = response['update_id'] + 1
+    response = requests.get("https://isdayoff.ru/today")
+    if response.content == '1':
+        return print('Сегодня нерабочий день')
+
+    employees = database.get_all_employees()
+    for employee in employees:
+        telegram.send_notification(employee.get('user_id'))
 
 
 if __name__ == '__main__':
     try:
-        pass
+        main()
     except KeyboardInterrupt:
         exit()

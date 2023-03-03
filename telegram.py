@@ -34,7 +34,7 @@ def callback_worker(call: types.CallbackQuery):
     hours = int(call.data.split(';')[1])
 
     if not database.get_owner_name(call.from_user.id):
-        return bot.send_message(call.message.chat.id, "Вас нет в списке тех, кто может отмечаться. Обратитесь к @aipnoobest")
+        return bot.send_message(call.message.chat.id, "Вас нет в списке тех, кто может отмечаться")
 
     if hours == -1:
         bot.edit_message_text(f"Сколько часов?",
@@ -76,7 +76,7 @@ def update_calendar(call, hours):
         "hours": hours
     }):
         logging.error("Ошибка во время обновления на этапе телеги")
-        return bot.send_message(call.message.chat.id, "Произошла ошибка во время обработки запроса. Обратитесь к @aipnoobest")
+        return bot.send_message(call.message.chat.id, "Произошла ошибка во время обработки запроса")
 
     bot.edit_message_text(f"Успешно отмечено в календаре!\nОтработано часов сегодня: {hours}",
                           call.message.chat.id,
@@ -84,4 +84,8 @@ def update_calendar(call, hours):
                           reply_markup=None)
 
 
-bot.polling(none_stop=True)
+if __name__ == '__main__':
+    try:
+        bot.polling(none_stop=True)
+    except KeyboardInterrupt:
+        exit()
