@@ -1,11 +1,9 @@
 import logging
-
 import telebot
 import config
 import calendar_handler as ch
 from telebot import types
 from datetime import date
-
 import database
 
 bot = telebot.TeleBot(config.TELEGRAM_KEY)
@@ -33,20 +31,43 @@ def send_notification(user_id):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call: types.CallbackQuery):
-    date_parts = call.data.split(';')[0].split('-')
-    mark_date = date(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
-    hours = call.data.split(';')[1]
+    hours = int(call.data.split(';')[1])
 
-    owner = database.get_owner_name(call.from_user.id)
-    if not owner:
+    if not database.get_owner_name(call.from_user.id):
         return bot.send_message(call.message.chat.id, "Вас нет в списке тех, кто может отмечаться. Обратитесь к @aipnoobest")
 
     if hours == -1:
-        bot.edit_message_text(f"Пока не реализовано",
+        bot.edit_message_text(f"Сколько часов?",
                               call.message.chat.id,
                               call.message.message_id,
                               reply_markup=None)
+        return bot.register_next_step_handler_by_chat_id(call.message.chat.id, hours_handler, call)
 
+    update_calendar(call, hours)
+
+
+def hours_handler(message: types.Message, call):
+    hours = message.text
+    try:
+        hours = float(hours)
+    except ValueError:
+        hours = -2
+    if hours == -1:
+        bot.delete_message(message.chat.id, message.id)
+        bot.delete_message(message.chat.id, call.message.id)
+        send_notification(call.from_user.id)
+        return
+    if hours < 0 or hours > 8:
+        bot.send_message(message.chat.id, "Некорректное количество часов. Напиши ещё раз. Если нужно отменить отметку, напиши -1")
+        bot.register_next_step_handler_by_chat_id(call.message.chat.id, hours_handler, call)
+        return
+    update_calendar(call, hours)
+
+
+def update_calendar(call, hours):
+    owner = database.get_owner_name(call.from_user.id)
+    date_parts = call.data.split(';')[0].split('-')
+    mark_date = date(int(date_parts[0]), int(date_parts[1]), int(date_parts[2]))
     if not ch.update_day({
         "owner": owner,
         "day": mark_date.day,
