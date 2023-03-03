@@ -86,6 +86,11 @@ def update_calendar(call, hours):
 
 if __name__ == '__main__':
     try:
+        if not (config.CONF_ADDRESS and config.TELEGRAM_KEY and config.CALENDAR_PAGE
+                and config.CONF_LOGIN and config.CONF_PASSWORD):
+            logging.critical("Файл config.py не заполнен!")
         bot.polling(none_stop=True)
+    except ImportError:
+        logging.critical("Файл config.py не найден!")
     except KeyboardInterrupt:
         exit()
