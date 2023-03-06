@@ -47,6 +47,21 @@ def sync_calendar():
     return False
 
 
+def is_day_off(day, month, employee):
+    sync_calendar()
+    page = BeautifulSoup(get_calendar(login()), 'html.parser')
+    expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
+                         text={employee}).parent
+    month_div = expander.find("h1", text=_number_to_month(month)).next_sibling
+    if not month_div: raise Exception("Ошибка при обработке календаря")
+    # noinspection PyUnresolvedReferences
+    cell = month_div.find("td", text=day)
+    if cell.attrs['data-highlight-colour'] == '#ffebe6':
+        logging.info("Сегодня выходной по приказу начальства")
+        return True
+    return False
+
+
 def _gen_month_table(month, year):
     header = f'<h1><strong>{_number_to_month(month)}</strong></h1>'
     header = BeautifulSoup(header, 'html.parser').contents[0]
