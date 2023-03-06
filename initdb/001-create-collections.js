@@ -1,35 +1,6 @@
 db = db.getSiblingDB('calendar')
 
-db.createCollection('calendar', {
-    validator: {
-        $jsonSchema: {
-            bsonType: "object",
-            required: [ "owner", "day", "month", "weekday", "hours" ],
-            properties: {
-                owner: {
-                    bsonType: "string",
-                    description: "ФИО владельца календаря"
-                },
-                day: {
-                    bsonType: "int",
-                    description: "День месяца (число)"
-                },
-                month: {
-                    bsonType: "int",
-                    description: "Номер месяца"
-                },
-                weekday: {
-                    bsonType: "int",
-                    description: "Номер дня недели"
-                },
-                hours: {
-                    bsonType: "double",
-                    description: "Количество отработанных часов в данный день"
-                }
-            }
-        }
-    }
-})
+db.createCollection('calendar')
 
 db.createCollection('telegrams', {
     validator: {
