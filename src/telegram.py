@@ -3,17 +3,18 @@ import telebot
 import config
 import calendar_handler as ch
 from telebot import types
-from datetime import date
+from datetime import date, datetime
+from requests import exceptions
 import database
 
 bot = telebot.TeleBot(config.TELEGRAM_KEY)
 
 
 @bot.message_handler(content_types=['text'])
-def info(message: types.Message):
+def commands(message: types.Message):
     if message.text == '/id':
         bot.send_message(message.from_user.id, str(message.from_user.id))
-    if message.text == '/notif':
+    if message.text == '/notify':
         if not database.get_owner_name(message.from_user.id):
             return bot.send_message(message.chat.id, "Вас нет в списке тех, кто может отмечаться")
         send_notification(message.from_user.id)
@@ -88,8 +89,7 @@ if __name__ == '__main__':
         if not (config.CONF_ADDRESS and config.TELEGRAM_KEY and config.CALENDAR_PAGE
                 and config.CONF_LOGIN and config.CONF_PASSWORD):
             logging.critical("Файл config.py не заполнен!")
-        bot.polling(none_stop=True)
-    except ImportError:
-        logging.critical("Файл config.py не найден!")
-    except KeyboardInterrupt:
-        exit()
+            exit(1)
+        bot.infinity_polling(timeout=15, long_polling_timeout=10)
+    except (TimeoutError, exceptions.ConnectTimeout, exceptions.ReadTimeout):
+        logging.info(f"{datetime.now().__str__()} : В очередной раз пропало соединение с телегой.")
