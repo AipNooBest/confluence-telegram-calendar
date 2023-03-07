@@ -56,7 +56,7 @@ def is_day_off(day, month, employee):
     if not month_div: raise Exception("Ошибка при обработке календаря")
     # noinspection PyUnresolvedReferences
     cell = month_div.find("td", text=day)
-    if cell.attrs['data-highlight-colour'] == '#ffebe6':
+    if 'data-highlight-colour' in cell.attrs and cell.attrs['data-highlight-colour'] == '#ffebe6':
         logging.info("Сегодня выходной по приказу начальства")
         return True
     return False
