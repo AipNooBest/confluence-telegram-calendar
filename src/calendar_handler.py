@@ -1,3 +1,4 @@
+import re
 import requests
 import config
 import json
@@ -130,8 +131,12 @@ def update_day(day_object):
                              text={day_object["owner"]}).parent
         month_div = expander.find("h1", text=_number_to_month(day_object["month"])).next_sibling
         if not month_div: return False
+        hours = float(f"{day_object['hours']:.1f}") if not int(day_object['hours']) == float(day_object['hours']) else int(day_object['hours'])
         # noinspection PyUnresolvedReferences
-        cell = month_div.find("td", text=day_object["day"])
+        cell: Tag = month_div.find(text=re.compile(str(day_object["day"]))).parent
+        if len(cell.contents) > 1:
+            for i in range(1, len(cell.contents)):
+                cell.contents[i].extract()
         match day_object["hours"]:
             case 8:
                 cell.attrs['data-highlight-colour'] = '#36b37e'
@@ -142,6 +147,10 @@ def update_day(day_object):
             case _:
                 cell.attrs['data-highlight-colour'] = '#ffc400'
                 cell.attrs['class'] = 'highlight-#ffc400'
+                sub = page.new_tag("sub")
+                sub.string = str(hours) + "ч"
+                cell.append(sub)
+
         database.check_and_update(
             {"owner": day_object["owner"], "day": day_object["day"], "month": day_object["month"],
              "weekday": day_object["weekday"]},
