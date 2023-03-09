@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import time
 import requests
 import telegram
 import database
@@ -18,7 +19,15 @@ def main():
         if ch.is_day_off(today.day, today.month, employee.get('full_name')):
             logging.info(f"Сегодня у {employee.get('full_name')} выходной")
             continue
-        telegram.send_notification(employee.get('user_id'))
+        while True:
+            try:
+                telegram.send_notification(employee.get('user_id'))
+                logging.info("NOTIFICATION SENT")
+                break
+            except requests.exceptions.ConnectionError:
+                logging.info("Ошибка во время отправки запроса, пробую снова...")
+                time.sleep(5)
+                continue
 
 
 if __name__ == '__main__':

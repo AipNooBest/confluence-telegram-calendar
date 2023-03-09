@@ -13,4 +13,4 @@ services:
     restart: always
     volumes:
       - ./src:/app
-    command: python telegram.py
+    command: sh -c "crond & python telegram.py"
