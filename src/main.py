@@ -23,6 +23,7 @@ def main():
             try:
                 telegram.send_notification(employee.get('user_id'))
                 logging.info("NOTIFICATION SENT")
+                time.sleep(2)
                 break
             except requests.exceptions.ConnectionError:
                 logging.info("Ошибка во время отправки запроса, пробую снова...")

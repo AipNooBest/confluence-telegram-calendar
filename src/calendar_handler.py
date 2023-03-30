@@ -51,14 +51,18 @@ def sync_calendar():
 def is_day_off(day, month, employee):
     sync_calendar()
     page = BeautifulSoup(get_calendar(login()), 'html.parser')
-    expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
-                         text={employee}).parent
-    month_div = expander.find("h1", text=_number_to_month(month)).next_sibling
-    if not month_div: raise Exception("Ошибка при обработке календаря")
-    # noinspection PyUnresolvedReferences
-    cell = month_div.find("td", text=day)
-    if 'data-highlight-colour' in cell.attrs and cell.attrs['data-highlight-colour'] == '#ffebe6':
-        logging.info("Сегодня выходной по приказу начальства")
+    try:
+        expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
+                             text={employee}).parent
+        month_div = expander.find("h1", text=_number_to_month(month)).next_sibling
+        if not month_div: raise Exception("Ошибка при обработке календаря")
+        # noinspection PyUnresolvedReferences
+        cell = month_div.find("td", text=day)
+        if 'data-highlight-colour' in cell.attrs and cell.attrs['data-highlight-colour'] == '#ffebe6':
+            logging.info("Сегодня выходной по приказу начальства")
+            return True
+    except AttributeError:
+        logging.warning("Указанный сотрудник не найден")
         return True
     return False
 
