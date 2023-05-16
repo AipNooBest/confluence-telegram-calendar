@@ -9,6 +9,7 @@ services:
       - "27017:27017"
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d/
+      - ./data:/data/db
 
   bot:
     container_name: calendar-bot
