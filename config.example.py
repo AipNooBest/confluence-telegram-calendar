@@ -10,5 +10,5 @@ CONF_LOGIN = ""
 CONF_PASSWORD = ""
 
 # Где развёрнута MongoDB
-DB_HOST = "localhost"
+DB_HOST = "mongo"
 DB_PORT = "27017"

@@ -3,7 +3,7 @@ import telebot
 import config
 import calendar_handler as ch
 from telebot import types
-from datetime import date, datetime
+from datetime import date
 from requests import exceptions
 import database
 
@@ -57,8 +57,8 @@ def hours_handler(message: types.Message, call):
         bot.delete_message(message.chat.id, call.message.id)
         send_notification(call.from_user.id)
         return
-    if hours < 0 or hours > 8:
-        bot.send_message(message.chat.id, "Некорректное количество часов. Напиши ещё раз. Если нужно отменить отметку, напиши -1")
+    if hours < 0 or hours > 12:
+        bot.send_message(message.chat.id, "Некорректное количество часов (>12 или <0). Напиши ещё раз. Если нужно отменить отметку, напиши -1")
         bot.register_next_step_handler_by_chat_id(call.message.chat.id, hours_handler, call)
         return
     update_calendar(call, hours)
@@ -86,10 +86,12 @@ def update_calendar(call, hours):
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.INFO, filename='telegram_log.txt',
+                            format="[%(asctime)s] %(levelname)s\t| %(message)s")
         if not (config.CONF_ADDRESS and config.TELEGRAM_KEY and config.CALENDAR_PAGE
                 and config.CONF_LOGIN and config.CONF_PASSWORD):
             logging.critical("Файл config.py не заполнен!")
             exit(1)
         bot.infinity_polling(timeout=15, long_polling_timeout=10)
     except (TimeoutError, exceptions.ConnectTimeout, exceptions.ReadTimeout):
-        logging.info(f"{datetime.now().__str__()} : В очередной раз пропало соединение с телегой.")
+        logging.info("В очередной раз пропало соединение с телегой.")

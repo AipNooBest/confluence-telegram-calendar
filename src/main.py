@@ -17,22 +17,24 @@ def main():
     employees = database.get_all_employees()
     for employee in employees:
         if ch.is_day_off(today.day, today.month, employee.get('full_name')):
-            logging.info(f"Сегодня у {employee.get('full_name')} выходной")
+            logging.info(f"{employee.get('full_name')}: выходной")
             continue
         while True:
             try:
                 telegram.send_notification(employee.get('user_id'))
-                logging.info("NOTIFICATION SENT")
+                logging.info(f"{employee.get('full_name')}: уведомление отправлено")
                 time.sleep(2)
                 break
             except requests.exceptions.ConnectionError:
-                logging.info("Ошибка во время отправки запроса, пробую снова...")
+                logging.debug("Ошибка во время отправки запроса, пробую снова...")
                 time.sleep(5)
                 continue
 
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.INFO, filename='main_log.txt',
+                            format="[%(asctime)s] %(levelname)s\t| %(message)s")
         main()
     except KeyboardInterrupt:
         exit()

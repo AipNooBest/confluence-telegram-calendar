@@ -1,5 +1,8 @@
+version: "3.4"
+
 services:
   mongo:
+    container_name: calendar-db
     image: mongo
     restart: always
     ports:
@@ -8,6 +11,7 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d/
 
   bot:
+    container_name: calendar-bot
     build:
       context: ./
     restart: always

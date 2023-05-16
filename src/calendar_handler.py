@@ -55,14 +55,15 @@ def is_day_off(day, month, employee):
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={employee}).parent
         month_div = expander.find("h1", text=_number_to_month(month)).next_sibling
-        if not month_div: raise Exception("Ошибка при обработке календаря")
+        if not month_div:
+            logging.exception("Ошибка при обработке календаря")
+            raise Exception("Ошибка при обработке календаря")
         # noinspection PyUnresolvedReferences
         cell = month_div.find("td", text=day)
         if 'data-highlight-colour' in cell.attrs and cell.attrs['data-highlight-colour'] == '#ffebe6':
-            logging.info("Сегодня выходной по приказу начальства")
             return True
     except AttributeError:
-        logging.warning("Указанный сотрудник не найден")
+        logging.warning(f"Сотрудник {employee} не найден")
         return True
     return False
 
@@ -130,7 +131,7 @@ def update_month():
 def update_day(day_object):
     try:
         sync_calendar()
-        page = BeautifulSoup(get_calendar(login()))
+        page = BeautifulSoup(get_calendar(login()), features="html.parser")
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={day_object["owner"]}).parent
         month_div = expander.find("h1", text=_number_to_month(day_object["month"])).next_sibling
@@ -189,6 +190,7 @@ def _upload_page(content: BeautifulSoup):
         "Content-Type": "application/json"
     })
     if response.status_code != 200:
+        logging.exception("Ошибка во время обновления страницы")
         raise Exception("Ошибка во время обновления страницы")
 
 
