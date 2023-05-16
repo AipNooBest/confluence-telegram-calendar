@@ -9,11 +9,13 @@ from datetime import date
 
 
 def main():
+    today = date.today()
+    if today.day == 1:
+        ch.update_month()
     response = requests.get("https://isdayoff.ru/today")
     if response.content == '1':
         return logging.info('Сегодня нерабочий день')
 
-    today = date.today()
     employees = database.get_all_employees()
     for employee in employees:
         if ch.is_day_off(today.day, today.month, employee.get('full_name')):
