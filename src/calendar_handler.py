@@ -42,15 +42,13 @@ def sync_calendar():
                                  "weekday": day_object["weekday"]},
                                 {"$set": day_object})
                         j += 1
-        return True
+        return html
     except Exception:
         logging.exception("Ошибка при синхронизации календаря.")
-    return False
 
 
 def is_day_off(day, month, employee):
-    sync_calendar()
-    page = BeautifulSoup(get_calendar(login()), 'html.parser')
+    page = sync_calendar()
     try:
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={employee}).parent
@@ -112,8 +110,7 @@ def login():
 
 
 def update_month():
-    sync_calendar()
-    page = BeautifulSoup(get_calendar(login()), 'html.parser')
+    page = sync_calendar()
     for expander in page.findAll("ac:structured-macro", attrs={'ac:name': 'expand'}):
         current_month = expander.contents[1].contents[2]
         next_month = expander.contents[1].contents[4]
@@ -130,8 +127,7 @@ def update_month():
 
 def update_day(day_object):
     try:
-        sync_calendar()
-        page = BeautifulSoup(get_calendar(login()), features="html.parser")
+        page = sync_calendar()
         expander = page.find("ac:parameter", attrs={'ac:name': 'title'},
                              text={day_object["owner"]}).parent
         month_div = expander.find("h1", text=_number_to_month(day_object["month"])).next_sibling
